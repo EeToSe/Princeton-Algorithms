@@ -85,9 +85,12 @@ public class Solver {
     public Iterable<Board> solution() {
         if (!isSolvable()) return null;
         Stack<Board> solutionseq = new Stack<Board>();
-        while (minNode.parent != null) {
-            solutionseq.push(minNode.board);
-            minNode = minNode.parent;
+        SearchNode tmpNode = minNode; // dont directly use minNode -> will change solver
+
+        // backtracking parents
+        while (tmpNode.parent != null) {
+            solutionseq.push(tmpNode.board);
+            tmpNode = tmpNode.parent;
         }
         solutionseq.push(inital);
         return solutionseq;

@@ -3,29 +3,30 @@ import edu.princeton.cs.algs4.Stack;
 public class Board {
     private final int[][] tiles; // defensive copy
     private final int n; // size of board
-    private final int hamming; // cach the hamming distance
-    private final int manhattan; // cach the manhattan distance
+    // private final int hamming; // cach the hamming distance
+    // private final int manhattan; // cach the manhattan distance
 
     // create a board from an n-by-n array of tiles,
     // where tiles[row][col] = tile at (row, col)
     public Board(int[][] tiles) {
         n = tiles.length;
         this.tiles = new int[n][n];
-        int hammingsum = 0;
-        int manhattansum = 0;
+        // int hammingsum = 0;
+        // int manhattansum = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 this.tiles[i][j] = tiles[i][j];
-                if (tiles[i][j] != 0 && tiles[i][j] != n * i + j + 1) {
-                    hammingsum++;
-                    int vertical = Math.abs(i - (tiles[i][j] - 1) / n);
-                    int horizontal = Math.abs(j - (tiles[i][j] - 1) % n);
-                    manhattansum += vertical + horizontal;
-                }
+                // int target = n * i + j;
+                // if (tiles[i][j] != 0 && target != tiles[i][j] - 1) {
+                //     hammingsum++;
+                //     int vertical = Math.abs(i - target / n);
+                //     int horizontal = Math.abs(j - target % n);
+                //     manhattansum += vertical + horizontal;
+                // }
             }
         }
-        hamming = hammingsum;
-        manhattan = manhattansum;
+        // hamming = hammingsum;
+        // manhattan = manhattansum;
     }
 
     // string representation of this board
@@ -48,34 +49,34 @@ public class Board {
 
     // number of tiles out of place
     public int hamming() {
-        return hamming;
-    //     int displacment = 0;    // number of tiles in the right position
-    //     for (int i = 0; i < n; i++) {
-    //         for (int j = 0; j < n; j++) {
-    //             if (tiles[i][j] != n * i + j + 1 && tiles[i][j] != 0) {
-    //                 displacment++;
-    //             }
-    //         }
-    //     }
-    //     return displacment;   // total number minus the blank square
+        // return hamming;
+        int displacment = 0;    // number of tiles in the right position
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (tiles[i][j] != n * i + j + 1 && tiles[i][j] != 0) {
+                    displacment++;
+                }
+            }
+        }
+        return displacment;   // total number minus the blank square
     }
 
     // sum of Manhattan distances between tiles and goal
     public int manhattan() {
-        return manhattan;
-    //     int sum = 0;
-    //     int remainder = 0;
-    //     int floor = 0;
-    //     for (int i = 0; i < n; i++) {
-    //         for (int j = 0; j < n; j++) {
-    //             if (tiles[i][j] != n * i + j + 1 && tiles[i][j] != 0) {
-    //                 remainder = (tiles[i][j] - 1) % n;
-    //                 floor = (tiles[i][j] - 1 - remainder) / n;
-    //                 sum += Math.abs(floor - i) + Math.abs(remainder - j);
-    //             }
-    //         }
-    //     }
-    //     return sum;
+        // return manhattan;
+        int sum = 0;
+        int remainder = 0;
+        int floor = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (tiles[i][j] != n * i + j + 1 && tiles[i][j] != 0) {
+                    remainder = (tiles[i][j] - 1) % n;
+                    floor = (tiles[i][j] - 1 - remainder) / n;
+                    sum += Math.abs(floor - i) + Math.abs(remainder - j);
+                }
+            }
+        }
+        return sum;
     }
 
     // is this board the goal board?
