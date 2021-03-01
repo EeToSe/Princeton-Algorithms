@@ -23,10 +23,7 @@ import edu.princeton.cs.algs4.Stack;
 
 public class Solver {
     private final Board inital; // inital board
-    MinPQ<SearchNode> pq = new MinPQ<SearchNode>(); // priority queue of the initial board
-    MinPQ<SearchNode> pqTwin = new MinPQ<SearchNode>();
     private SearchNode minNode; // // priority queue for the initial board
-    private SearchNode minNodeTwin; // // priority queue for the initial's twin board
 
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
@@ -35,10 +32,14 @@ public class Solver {
         }
         this.inital = initial;
 
+        MinPQ<SearchNode> pq = new MinPQ<SearchNode>(); // priority queue of the initial board
+        MinPQ<SearchNode> pqTwin = new MinPQ<SearchNode>();
+
         // inital the search node
         pq.insert(new SearchNode(initial, 0, null));
         pqTwin.insert(new SearchNode(initial.twin(), 0, null));
 
+        SearchNode minNodeTwin; // priority queue for the initial's twin board
         // delete min from pq
         minNode = pq.delMin();
         minNodeTwin = pqTwin.delMin();
@@ -96,10 +97,10 @@ public class Solver {
      * Helper class to represent the search node in game tree
      *******************************************************/
     private class SearchNode implements Comparable<SearchNode> {
-        private Board board; // board to move
-        private int moves; // how many moves have made
-        private int priority; // priority = moves + manhattan
-        private SearchNode parent; // previous search node
+        private final Board board; // board to move
+        private final int moves; // how many moves have made
+        private final int priority; // priority = moves + manhattan
+        private final SearchNode parent; // previous search node
 
         // constructor
         public SearchNode(Board board, int moves, SearchNode parent) {
