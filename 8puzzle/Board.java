@@ -156,4 +156,45 @@ public class Board {
         }
         return twinBoard;
     }
+
+    public boolean isSolvable() {
+        int[] tiles1D = new int[n * n];
+        int inversions = 0;
+        // count the number of inversions
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                // exclude the blank and last tile
+                if (tiles1D[i * n + j] != 0 && i * n + j != n * n - 1) {
+                    for (int k = i * n + j + 1; k < n * n; k++) {
+                        if (tiles1D[k] != 0) {
+                            if (tiles1D[i * n + j] > tiles1D[k])
+                                inversions++;
+                        }
+                    }
+                }
+            }
+        }
+        if (n % 2 == 1 && inversions % 2 == 0) {
+            // odd-sized boards
+            return true;
+        }
+        int row = 0;
+        if (n % 2 == 0) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (tiles1D[i * n + j] == 0)
+                        row = i;
+                }
+            }
+            if ((inversions + row) % 2 == 1)
+                return true;
+        }
+        return false;
+    }
+
+    // return the value at tile (x,y)
+    public int tileAt(int x, int y) {
+        return tiles[x][y];
+    }
 }
+
