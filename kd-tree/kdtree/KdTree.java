@@ -8,6 +8,9 @@ import java.util.ArrayList;
 public class KdTree {
     private KdNode root; // root of KdTree
     private int size; // size of KdTree
+    private Point2D winnerPoint; // nearest point found
+    private double champion;
+    private int num;
 
     // Helper data structure to denote KdTree node
     private static class KdNode {
@@ -165,7 +168,58 @@ public class KdTree {
     }
 
     // a nearest neighbor in the set to point p; null if the set is empty
-    //public Point2D nearest(Point2D p)
+    public Point2D nearest(Point2D p) {
+        if (p == null) {
+            throw new IllegalArgumentException();
+        }
+        if (isEmpty()) {
+            return null;
+        }
+        num = 0;
+        champion = Double.POSITIVE_INFINITY;
+        return nearest(p, root);
+    }
+
+    private Point2D nearest(Point2D p, KdNode node) {
+        if (node == null) {
+            return winnerPoint;
+        }
+
+        if (node.rect.distanceSquaredTo(p) <= champion) {
+            double dist = p.distanceSquaredTo(node.p);
+            
+            if (dist < champion) {
+                champion = dist;
+                winnerPoint = node.p;
+            }
+
+            // pruning progress: decide which
+            if (node.lb != null && node.lb.rect.contains(p)) {
+                winnerPoint = nearest(p, node.lb);
+                winnerPoint = nearest(p, node.rt);
+            }
+            else if (node.rt != null && node.rt.rect.contains(p)) {
+                winnerPoint = nearest(p, node.rt);
+                winnerPoint = nearest(p, node.lb);
+            }
+            else {
+                double distlb = node.lb != null ? node.lb.rect.distanceSquaredTo(p) :
+                                Double.POSITIVE_INFINITY;
+                double distrt = node.rt != null ? node.rt.rect.distanceSquaredTo(p) :
+                                Double.POSITIVE_INFINITY;
+                if (distlb <= distrt) {
+                    winnerPoint = nearest(p, node.lb);
+                    winnerPoint = nearest(p, node.rt);
+                }
+                else {
+                    winnerPoint = nearest(p, node.rt);
+                    winnerPoint = nearest(p, node.lb);
+                }
+            }
+        }
+        return winnerPoint;
+    }
+
 
     // compare point p with parent, calculate the discriminator based on height of parent node
     // @return value: 1 - go left/bottom; -1 - go right/top; 0 - same point
@@ -184,6 +238,10 @@ public class KdTree {
         }
     }
 
+    private int getNum() {
+        return num;
+    }
+
     public static void main(String[] args) {
         // initialize the data structures from file
         String filename = args[0];
@@ -197,7 +255,10 @@ public class KdTree {
         }
         RectHV searchRect = new RectHV(0, 0.5, 1, 1);
         ArrayList list = (ArrayList) kdtree.range(searchRect);
-        System.out.println(list.size());
+        Point2D ref = new Point2D(0.81, 0.3);
+        Point2D p = kdtree.nearest(ref);
+        System.out.println(p);
+        System.out.println(kdtree.num);
         //kdtree.draw();
     }
 }
