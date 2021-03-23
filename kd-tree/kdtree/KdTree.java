@@ -1,4 +1,3 @@
-import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdDraw;
@@ -124,6 +123,7 @@ public class KdTree {
     private void draw(KdNode node) {
         if (node != null) {
             StdDraw.setPenColor(StdDraw.BLACK);
+            StdDraw.setPenRadius(0.01);
             node.p.draw();
 
             // set red or blue based on the level of node
@@ -176,48 +176,92 @@ public class KdTree {
             return null;
         }
         num = 0;
+        // search root node, init champion and winnerPoint
         champion = Double.POSITIVE_INFINITY;
-        return nearest(p, root);
+        nearest(p, root);
+        return winnerPoint;
     }
 
-    private Point2D nearest(Point2D p, KdNode node) {
+    private void nearest(Point2D p, KdNode node) {
         if (node == null) {
-            return winnerPoint;
+            return;
         }
 
-        if (node.rect.distanceSquaredTo(p) <= champion) {
+        if (node.rect.distanceSquaredTo(p) < champion) {
             double dist = p.distanceSquaredTo(node.p);
-            
+
             if (dist < champion) {
                 champion = dist;
                 winnerPoint = node.p;
             }
 
-            // pruning progress: decide which
             if (node.lb != null && node.lb.rect.contains(p)) {
-                winnerPoint = nearest(p, node.lb);
-                winnerPoint = nearest(p, node.rt);
+                nearest(p, node.lb);
+                if (node.rt.rect.distanceSquaredTo(p) < champion) {
+                    nearest(p, node.rt);
+                }
             }
+
             else if (node.rt != null && node.rt.rect.contains(p)) {
-                winnerPoint = nearest(p, node.rt);
-                winnerPoint = nearest(p, node.lb);
+                nearest(p, node.rt);
+                if (node.lb.rect.distanceSquaredTo(p) < champion) {
+                    nearest(p, node.lb);
+                }
             }
+
             else {
                 double distlb = node.lb != null ? node.lb.rect.distanceSquaredTo(p) :
                                 Double.POSITIVE_INFINITY;
                 double distrt = node.rt != null ? node.rt.rect.distanceSquaredTo(p) :
                                 Double.POSITIVE_INFINITY;
                 if (distlb <= distrt) {
-                    winnerPoint = nearest(p, node.lb);
-                    winnerPoint = nearest(p, node.rt);
+                    nearest(p, node.lb);
+                    if (node.rt != null && node.rt.rect.distanceSquaredTo(p) < champion) {
+                        nearest(p, node.rt);
+                    }
                 }
                 else {
-                    winnerPoint = nearest(p, node.rt);
-                    winnerPoint = nearest(p, node.lb);
+                    nearest(p, node.rt);
+                    if (node.lb != null && node.lb.rect.distanceSquaredTo(p) < champion) {
+                        nearest(p, node.lb);
+                    }
                 }
+
             }
+            // if (node.rect.distanceSquaredTo(p) < champion) {
+            //     double dist = p.distanceSquaredTo(node.p);
+            //
+            //     if (dist < champion) {
+            //         champion = dist;
+            //         winnerPoint = node.p;
+            //     }
+            //
+            //     // pruning progress: decide which
+            //     if (node.lb != null && node.lb.rect.contains(p)) {
+            //         nearest(p, node.lb);
+            //         nearest(p, node.rt);
+            //     }
+            //     else if (node.rt != null && node.rt.rect.contains(p)) {
+            //         nearest(p, node.rt);
+            //         nearest(p, node.lb);
+            //     }
+            //     else {
+            //         double distlb = node.lb != null ? node.lb.rect.distanceSquaredTo(p) :
+            //                         Double.POSITIVE_INFINITY;
+            //         double distrt = node.rt != null ? node.rt.rect.distanceSquaredTo(p) :
+            //                         Double.POSITIVE_INFINITY;
+            //         if (distlb <= distrt) {
+            //             nearest(p, node.lb);
+            //             nearest(p, node.rt);
+            //         }
+            //         else {
+            //             winnerPoint = nearest(p, node.rt);
+            //             winnerPoint = nearest(p, node.lb);
+            //         }
+            //     }
+            // }
+            // return winnerPoint;
         }
-        return winnerPoint;
     }
 
 
@@ -238,27 +282,35 @@ public class KdTree {
         }
     }
 
-    private int getNum() {
-        return num;
-    }
-
     public static void main(String[] args) {
-        // initialize the data structures from file
-        String filename = args[0];
-        In in = new In(filename);
-        KdTree kdtree = new KdTree();
-        while (!in.isEmpty()) {
-            double x = in.readDouble();
-            double y = in.readDouble();
-            Point2D p = new Point2D(x, y);
-            kdtree.insert(p);
-        }
-        RectHV searchRect = new RectHV(0, 0.5, 1, 1);
-        ArrayList list = (ArrayList) kdtree.range(searchRect);
-        Point2D ref = new Point2D(0.81, 0.3);
-        Point2D p = kdtree.nearest(ref);
+        // // initialize the data structures from file
+        // String filename = args[0];
+        // In in = new In(filename);
+        // KdTree kdtree = new KdTree();
+        // while (!in.isEmpty()) {
+        //     double x = in.readDouble();
+        //     double y = in.readDouble();
+        //     Point2D p = new Point2D(x, y);
+        //     kdtree.insert(p);
+        // }
+        // RectHV searchRect = new RectHV(0, 0.5, 1, 1);
+        // ArrayList list = (ArrayList) kdtree.range(searchRect);
+        KdTree kt = new KdTree();
+        Point2D query = new Point2D(0.91, 0.6);
+        Point2D pA = new Point2D(0.7, 0.2);
+        Point2D pB = new Point2D(0.5, 0.4);
+        Point2D pC = new Point2D(0.2, 0.3);
+        Point2D pD = new Point2D(0.4, 0.7);
+        Point2D pE = new Point2D(0.9, 0.6);
+        kt.insert(pA);
+        kt.insert(pB);
+        kt.insert(pC);
+        kt.insert(pD);
+        kt.insert(pE);
+
+        Point2D p = kt.nearest(query);
         System.out.println(p);
-        System.out.println(kdtree.num);
+        //System.out.println(kdtree.num);
         //kdtree.draw();
     }
 }
