@@ -65,13 +65,13 @@ public class PointSET {
         if (p == null) {
             throw new IllegalArgumentException();
         }
-        if (PointTS.size() == 0) {
+        if (isEmpty()) {
             return null;
         }
         Point2D ans = PointTS.first();
-        Double champion = p.distanceSquaredTo(ans);
+        double champion = p.distanceSquaredTo(ans);
         for (Point2D point : PointTS) {
-            Double distance = p.distanceSquaredTo(point);
+            double distance = p.distanceSquaredTo(point);
             if (distance < champion) {
                 champion = distance;
                 ans = point;

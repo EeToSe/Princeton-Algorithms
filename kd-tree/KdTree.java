@@ -1,3 +1,4 @@
+import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdDraw;
@@ -9,7 +10,6 @@ public class KdTree {
     private int size; // size of KdTree
     private Point2D winnerPoint; // nearest point found
     private double champion;
-    private int num;
 
     // Helper data structure to denote KdTree node
     private static class KdNode {
@@ -142,6 +142,7 @@ public class KdTree {
     }
 
     // all points that are inside the rectangle (or on the boundary)
+    // instead of checking both subtrees directly, we make the choice (tested faster)
     public Iterable<Point2D> range(RectHV rect) {
         if (rect == null) {
             throw new IllegalArgumentException();
@@ -149,22 +150,35 @@ public class KdTree {
         if (isEmpty()) {
             return null;
         }
+
         // recursively implement range
         return range(rect, root);
     }
 
     private ArrayList<Point2D> range(RectHV rect, KdNode node) {
         ArrayList<Point2D> points = new ArrayList<Point2D>();
+        if (rect.contains(node.p)) {
+            points.add(node.p);
+        }
 
-        if (node != null && rect.intersects(node.rect)) {
-            // 偷懒做法 appends all of the elements returned to the end
+        // only search the subtree when its rect intersects the search rect
+        if (node.lb != null && node.lb.rect.intersects(rect)) {
             points.addAll(range(rect, node.lb));
+        }
+        if (node.rt != null && node.rt.rect.intersects(rect)) {
             points.addAll(range(rect, node.rt));
-            if (rect.contains(node.p)) {
-                points.add(node.p);
-            }
         }
         return points;
+
+        // if (node != null && rect.intersects(node.rect)) {
+        //     // 偷懒做法 appends all of the elements returned to the end
+        //     points.addAll(range(rect, node.lb));
+        //     points.addAll(range(rect, node.rt));
+        //     if (rect.contains(node.p)) {
+        //         points.add(node.p);
+        //     }
+        // }
+        // return points;
     }
 
     // a nearest neighbor in the set to point p; null if the set is empty
@@ -175,7 +189,6 @@ public class KdTree {
         if (isEmpty()) {
             return null;
         }
-        num = 0;
         // search root node, init champion and winnerPoint
         champion = Double.POSITIVE_INFINITY;
         nearest(p, root);
@@ -187,28 +200,28 @@ public class KdTree {
             return;
         }
 
+        // pruning process, determine if we need to search in node's rect
         if (node.rect.distanceSquaredTo(p) < champion) {
             double dist = p.distanceSquaredTo(node.p);
-
+            // update champion and winnerPoint
             if (dist < champion) {
                 champion = dist;
                 winnerPoint = node.p;
             }
 
+            // got to left-bottom branch
             if (node.lb != null && node.lb.rect.contains(p)) {
                 nearest(p, node.lb);
-                if (node.rt.rect.distanceSquaredTo(p) < champion) {
-                    nearest(p, node.rt);
-                }
+                nearest(p, node.rt);
             }
 
+            // go to right-top branch
             else if (node.rt != null && node.rt.rect.contains(p)) {
                 nearest(p, node.rt);
-                if (node.lb.rect.distanceSquaredTo(p) < champion) {
-                    nearest(p, node.lb);
-                }
+                nearest(p, node.lb);
             }
 
+            // calculate which branch to go
             else {
                 double distlb = node.lb != null ? node.lb.rect.distanceSquaredTo(p) :
                                 Double.POSITIVE_INFINITY;
@@ -216,51 +229,13 @@ public class KdTree {
                                 Double.POSITIVE_INFINITY;
                 if (distlb <= distrt) {
                     nearest(p, node.lb);
-                    if (node.rt != null && node.rt.rect.distanceSquaredTo(p) < champion) {
-                        nearest(p, node.rt);
-                    }
+                    nearest(p, node.rt);
                 }
                 else {
                     nearest(p, node.rt);
-                    if (node.lb != null && node.lb.rect.distanceSquaredTo(p) < champion) {
-                        nearest(p, node.lb);
-                    }
+                    nearest(p, node.lb);
                 }
-
             }
-            // if (node.rect.distanceSquaredTo(p) < champion) {
-            //     double dist = p.distanceSquaredTo(node.p);
-            //
-            //     if (dist < champion) {
-            //         champion = dist;
-            //         winnerPoint = node.p;
-            //     }
-            //
-            //     // pruning progress: decide which
-            //     if (node.lb != null && node.lb.rect.contains(p)) {
-            //         nearest(p, node.lb);
-            //         nearest(p, node.rt);
-            //     }
-            //     else if (node.rt != null && node.rt.rect.contains(p)) {
-            //         nearest(p, node.rt);
-            //         nearest(p, node.lb);
-            //     }
-            //     else {
-            //         double distlb = node.lb != null ? node.lb.rect.distanceSquaredTo(p) :
-            //                         Double.POSITIVE_INFINITY;
-            //         double distrt = node.rt != null ? node.rt.rect.distanceSquaredTo(p) :
-            //                         Double.POSITIVE_INFINITY;
-            //         if (distlb <= distrt) {
-            //             nearest(p, node.lb);
-            //             nearest(p, node.rt);
-            //         }
-            //         else {
-            //             winnerPoint = nearest(p, node.rt);
-            //             winnerPoint = nearest(p, node.lb);
-            //         }
-            //     }
-            // }
-            // return winnerPoint;
         }
     }
 
@@ -283,34 +258,40 @@ public class KdTree {
     }
 
     public static void main(String[] args) {
-        // // initialize the data structures from file
-        // String filename = args[0];
-        // In in = new In(filename);
-        // KdTree kdtree = new KdTree();
-        // while (!in.isEmpty()) {
-        //     double x = in.readDouble();
-        //     double y = in.readDouble();
-        //     Point2D p = new Point2D(x, y);
-        //     kdtree.insert(p);
-        // }
-        // RectHV searchRect = new RectHV(0, 0.5, 1, 1);
-        // ArrayList list = (ArrayList) kdtree.range(searchRect);
+        // initialize the data structures from file
+        String filename = args[0];
+        In in = new In(filename);
         KdTree kt = new KdTree();
-        Point2D query = new Point2D(0.91, 0.6);
-        Point2D pA = new Point2D(0.7, 0.2);
-        Point2D pB = new Point2D(0.5, 0.4);
-        Point2D pC = new Point2D(0.2, 0.3);
-        Point2D pD = new Point2D(0.4, 0.7);
-        Point2D pE = new Point2D(0.9, 0.6);
-        kt.insert(pA);
-        kt.insert(pB);
-        kt.insert(pC);
-        kt.insert(pD);
-        kt.insert(pE);
+        while (!in.isEmpty()) {
+            double x = in.readDouble();
+            double y = in.readDouble();
+            Point2D p = new Point2D(x, y);
+            kt.insert(p);
+        }
 
-        Point2D p = kt.nearest(query);
-        System.out.println(p);
-        //System.out.println(kdtree.num);
+        RectHV searchRect = new RectHV(0, 0.5, 1, 1);
+        // KdTree kt = new KdTree();
+        // Point2D query = new Point2D(0.91, 0.6);
+        // Point2D pA = new Point2D(0.7, 0.2);
+        // Point2D pB = new Point2D(0.5, 0.4);
+        // Point2D pC = new Point2D(0.2, 0.3);
+        // Point2D pD = new Point2D(0.4, 0.7);
+        // Point2D pE = new Point2D(0.9, 0.6);
+        // kt.insert(pA);
+        // kt.insert(pB);
+        // kt.insert(pC);
+        // kt.insert(pD);
+        // kt.insert(pE);
+        long startTime = System.nanoTime();
+        for (int i = 0; i < 100; i++) {
+            kt.range(searchRect);
+        }
+        long estimatedTime = System.nanoTime() - startTime;
+        ArrayList list = (ArrayList) kt.range(searchRect);
+
+        //Point2D p = kt.nearest(query);
+        //System.out.println(p);
+        System.out.println(estimatedTime);
         //kdtree.draw();
     }
 }
